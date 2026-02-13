@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Shop Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans Khmer', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+        }
+
+        /* Telegram Background Pattern Simulation */
+        .telegram-bg {
+            background-color: #e4ebf0;
+            background-image: url("https://web.telegram.org/img/bg_0.png"); 
+            background-blend-mode: soft-light;
+            background-size: cover;
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .slide-up { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="h-screen w-full flex items-center justify-center p-0 sm:p-4">
+
+    <!-- Phone Container -->
+    <div class="w-full h-full sm:h-[850px] sm:max-w-md bg-white shadow-2xl sm:rounded-[2.5rem] overflow-hidden border-0 sm:border-[8px] sm:border-gray-800 flex flex-col relative">
+        
+        <!-- Status Bar (Visual only for phone look) -->
+        <div class="hidden sm:flex bg-gray-800 h-6 w-full items-center justify-center space-x-2 shrink-0 z-30">
+            <div class="w-16 h-4 bg-black rounded-b-xl absolute top-0"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="bg-[#517da2] text-white p-3 flex items-center justify-between shadow-md z-10 shrink-0">
+            <div class="flex items-center space-x-3">
+                <!-- Bot Avatar -->
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl select-none shadow-inner border border-white/20">
+                    KH
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide">Khmer Shop Bot</h1>
+                    <p class="text-xs text-blue-100 opacity-90 font-medium">bot</p>
+                </div>
+            </div>
+            <button onclick="resetChat()" class="text-white hover:text-gray-200 p-2 rounded-full hover:bg-white/10 transition group" title="ចាប់ផ្តើមថ្មី">
+                <i data-lucide="refresh-ccw" width="20" class="group-active:rotate-180 transition-transform duration-500"></i>
+            </button>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 telegram-bg space-y-4 relative scroll-smooth">
+            <!-- Messages injected here -->
+        </div>
+
+        <!-- Bottom Menu -->
+        <div class="bg-white p-2 border-t border-gray-200 z-20 shrink-0 pb-safe">
+            
+            <!-- Floating Cart Summary -->
+            <div id="cart-summary" class="hidden transform translate-y-2 transition-all duration-300 ease-out mb-2 mx-1">
+                <div onclick="viewCart()" class="flex justify-between items-center bg-[#517da2] text-white p-3 rounded-xl shadow-lg cursor-pointer hover:bg-[#406380] active:scale-[0.98] transition">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="shopping-bag" width="18"></i>
+                        <span class="text-sm font-bold" id="cart-count-summary">0 មុខ</span>
+                    </div>
+                    <span class="text-sm font-bold bg-white/20 px-2 py-1 rounded-md" id="cart-total-summary">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Menu Grid -->
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <button id="btn-products" onclick="handleCommand('SHOW_PRODUCTS')" class="menu-btn flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3.5 rounded-xl transition active:scale-95 border border-gray-200 group">
+                    <i data-lucide="package" width="20" class="text-gray-500 group-hover:text-[#517da2] transition-colors"></i>
+                    <span class="font-bold text-sm">ទំនិញ</span>
+                </button>
+                
+                <button id="btn-cart" onclick="viewCart()" class="menu-btn flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3.5 rounded-xl transition relative active:scale-95 border border-gray-200 group">
+                    <i data-lucide="shopping-cart" width="20" class="text-gray-500 group-hover:text-[#517da2] transition-colors"></i>
+                    <span class="font-bold text-sm">កន្ត្រក</span>
+                    <span id="cart-badge" class="hidden absolute -top-1.5 right-8 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold shadow-sm animate-bounce">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cart Modal -->
+        <div id="cart-modal" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+            <!-- Modal Content -->
+            <div class="bg-white w-full rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl slide-up max-h-[85%] flex flex-col relative overflow-hidden">
+                
+                <!-- Decorative Header Bar -->
+                <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full sm:hidden"></div>
+
+                <div class="flex justify-between items-center mb-4 mt-2 sm:mt-0 border-b border-gray-100 pb-3 shrink-0">
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-gray-800">
+                        <span class="bg-blue-100 p-1.5 rounded-lg text-[#517da2]"><i data-lucide="shopping-cart" width="20"></i></span>
+                        កន្ត្រករបស់អ្នក
+                    </h2>
+                    <button onclick="closeModal()" class="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
+                        <i data-lucide="x" width="24"></i>
+                    </button>
+                </div>
+                
+                <!-- Empty State (Hidden by default) -->
+                <div id="empty-cart-msg" class="hidden flex-col items-center justify-center py-10 text-gray-400">
+                    <i data-lucide="shopping-bag" width="48" class="mb-2 opacity-50"></i>
+                    <p>កន្ត្រករបស់អ្នកទទេ</p>
+                </div>
+
+                <div id="cart-items-list" class="overflow-y-auto mb-4 space-y-3 no-scrollbar flex-1 px-1">
+                    <!-- Cart items injected here -->
+                </div>
+
+                <div class="flex justify-between items-center mb-4 text-lg font-bold border-t border-dashed border-gray-300 pt-4 shrink-0">
+                    <span class="text-gray-600">សរុបទាំងអស់:</span>
+                    <span class="text-[#517da2] text-2xl font-black" id="modal-total">$0.00</span>
+                </div>
+
+                <button onclick="checkout()" class="w-full bg-[#517da2] hover:bg-[#406380] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-lg shadow-blue-200 shrink-0">
+                    <i data-lucide="qr-code" width="20"></i>
+                    ទូទាត់ប្រាក់ (KHQR)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Configuration & Data ---
+        const PRODUCTS = [
+            { id: 1, name: 'អាវយឺត T-Shirt', price: 5.00, image: '👕' },
+            { id: 2, name: 'ស្បែកជើង Sneaker', price: 25.00, image: '👟' },
+            { id: 3, name: 'កាបូប Backpack', price: 15.00, image: '🎒' },
+            { id: 4, name: 'នាឡិកាដៃ Smart', price: 45.00, image: '⌚' },
+            { id: 5, name: 'កាស Bluetooth', price: 12.00, image: '🎧' },
+            { id: 6, name: 'វ៉ែនតាការពារកំដៅ', price: 8.50, image: '🕶️' },
+            { id: 7, name: 'មួក Cap', price: 4.00, image: '🧢' },
+            { id: 8, name: 'កាមេរ៉ា Digital', price: 120.00, image: '📷' },
+            { id: 9, name: 'អាវក្រៅ Jacket', price: 35.00, image: '🧥' },
+            { id: 10, name: 'ខោខូវប៊យ Jeans', price: 18.00, image: '👖' }
+        ];
+
+        let cart = [];
+        let paymentStatus = 'idle'; // idle, pending, success
+
+        // --- DOM Elements ---
+        const chatContainer = document.getElementById('chat-container');
+        const cartBadge = document.getElementById('cart-badge');
+        const cartSummary = document.getElementById('cart-summary');
+        const cartCountSummary = document.getElementById('cart-count-summary');
+        const cartTotalSummary = document.getElementById('cart-total-summary');
+        const cartModal = document.getElementById('cart-modal');
+        const cartItemsList = document.getElementById('cart-items-list');
+        const modalTotal = document.getElementById('modal-total');
+        const btnProducts = document.getElementById('btn-products');
+        const btnCart = document.getElementById('btn-cart');
+        const emptyCartMsg = document.getElementById('empty-cart-msg');
+
+        // --- Initialization ---
+        window.onload = function() {
+            lucide.createIcons();
+            resetChat();
+        };
+
+        function resetChat() {
+            chatContainer.innerHTML = '';
+            cart = [];
+            paymentStatus = 'idle';
+            updateCartUI();
+            
+            // Enable buttons
+            toggleMenuButtons(true);
+
+            // Intro Sequence
+            addBotMessage("សួស្តី! 🙏 សូមស្វាគមន៍មកកាន់ Khmer Shop Bot។\nយើងមានលក់សម្ភារៈប្រើប្រាស់ជាច្រើន។");
+            
+            setTimeout(() => {
+                addBotMessage("សូមចុចលើប៊ូតុង 'ទំនិញ' ខាងក្រោមដើម្បីមើលបញ្ជីផលិតផល។ 👇", 'menu');
+            }, 800);
+        }
+
+        // --- Core Messaging ---
+
+        function addUserMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex justify-end fade-in mb-3";
+            msgDiv.innerHTML = `
+                <div class="max-w-[85%] rounded-2xl rounded-tr-none p-3 shadow-sm text-sm bg-[#effdde] text-gray-800 border border-[#dcf8c6]">
+                    <div class="whitespace-pre-line leading-relaxed">${text}</div>
+                    <div class="text-[10px] text-green-800 opacity-60 text-right mt-1 flex items-center justify-end gap-1">
+                        ${getCurrentTime()} <i data-lucide="check-check" width="12"></i>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            lucide.createIcons();
+            scrollToBottom();
+        }
+
+        function addBotMessage(text, type = 'text', data = null) {
+            showTypingIndicator();
+            
+            // Simulating network delay
+            const delay = Math.floor(Math.random() * 500) + 600;
+
+            setTimeout(() => {
+                removeTypingIndicator();
+                
+                const msgDiv = document.createElement('div');
+                msgDiv.className = "flex justify-start fade-in mb-3 w-full";
+                
+                let contentHTML = '';
+
+                // 1. Plain Text
+                if (text) {
+                    contentHTML += `<div class="whitespace-pre-line leading-relaxed">${text}</div>`;
+                }
+
+                // 2. Product Grid
+                if (type === 'products') {
+                    contentHTML += `<div class="grid grid-cols-2 gap-2 mt-3">`;
+                    data.forEach(p => {
+                        contentHTML += `
+                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer group" onclick="addToCart(${p.id})">
+                                <div class="text-4xl mb-2 transform group-hover:scale-110 transition duration-300 drop-shadow-sm">${p.image}</div>
+                                <div class="font-bold text-gray-800 text-xs mb-1 h-8 flex items-center justify-center w-full leading-tight line-clamp-2">${p.name}</div>
+                                <div class="text-[#517da2] font-black mb-2">$${p.price.toFixed(2)}</div>
+                                <button class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1.5 px-3 rounded-lg w-full transition active:scale-95 shadow-sm font-medium flex items-center justify-center gap-1">
+                                    បន្ថែម <i data-lucide="plus" width="12"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    contentHTML += `</div>`;
+                }
+
+                // 3. KHQR Payment Card
+                if (type === 'khqr') {
+                    contentHTML += `
+                        <div class="mt-3 bg-white p-4 rounded-xl border border-red-100 flex flex-col items-center w-full shadow-sm relative overflow-hidden">
+                            <!-- Header Decoration -->
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-[#ce2029]"></div>
+                            
+                            <div class="bg-[#ce2029] text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-sm flex items-center gap-1">
+                                <span>KHQR Payment</span>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer mb-3" onclick="confirmPayment()">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=KHQR-PAY-${data.total}-USD" 
+                                     alt="KHQR" 
+                                     class="border-4 border-white shadow-lg rounded-xl w-44 h-44 group-hover:scale-105 transition duration-300">
+                            </div>
+                            
+                            <div class="text-center text-gray-500 text-xs mb-1">ស្កេនដើម្បីបង់ប្រាក់</div>
+                            <div class="text-center font-black text-[#ce2029] text-2xl mb-4 tracking-tight">$${data.total.toFixed(2)}</div>
+                            
+                            <button id="confirm-pay-btn" onclick="confirmPayment()" 
+                                class="bg-[#26a65b] text-white py-3 px-6 rounded-xl w-full font-bold hover:bg-[#1e824c] transition shadow-md text-sm flex items-center justify-center gap-2 active:scale-95">
+                                <i data-lucide="check-circle-2" width="18"></i>
+                                (Simulate) បង់ប្រាក់រួចរាល់
+                            </button>
+                        </div>
+                    `;
+                }
+
+                msgDiv.innerHTML = `
+                    <div class="max-w-[90%] sm:max-w-[85%] rounded-2xl rounded-tl-sm p-3 shadow-sm text-sm bg-white text-gray-800 border border-gray-100 relative">
+                         ${contentHTML}
+                         <div class="text-[10px] text-gray-400 text-right mt-1">${getCurrentTime()}</div>
+                    </div>
+                `;
+
+                chatContainer.appendChild(msgDiv);
+                lucide.createIcons();
+                scrollToBottom();
+
+            }, delay);
+        }
+
+        // --- Helpers ---
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showTypingIndicator() {
+            if (document.getElementById('typing-indicator')) return;
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = "flex justify-start mb-3 fade-in";
+            typingDiv.innerHTML = `
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm flex space-x-1.5 w-16 items-center justify-center border border-gray-100 h-[42px]">
+                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+                </div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) typingDiv.remove();
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+            }, 100);
+        }
+
+        function toggleMenuButtons(enable) {
+            const btns = [btnProducts, btnCart];
+            btns.forEach(btn => {
+                if (enable) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale');
+                }
+            });
+        }
+
+        // --- Business Logic ---
+
+        function handleCommand(command) {
+            if (paymentStatus === 'pending') {
+                chatContainer.classList.add('animate-pulse');
+                setTimeout(() => chatContainer.classList.remove('animate-pulse'), 500);
+                return;
+            }
+
+            if (command === 'SHOW_PRODUCTS') {
+                addUserMessage("📦 មើលបញ្ជីទំនិញ");
+                addBotMessage("ខាងក្រោមនេះគឺជាទំនិញពេញនិយមរបស់យើង៖", 'products', PRODUCTS);
+            }
+        }
+
+        function addToCart(productId) {
+            if (paymentStatus === 'pending') return;
+
+            const product = PRODUCTS.find(p => p.id === productId);
+            
+            // Animation for cart add
+            const tempCart = document.createElement('div');
+            tempCart.innerHTML = product.image;
+            tempCart.className = "fixed z-50 text-4xl pointer-events-none transition-all duration-700 ease-in-out";
+            tempCart.style.left = "50%";
+            tempCart.style.top = "50%";
+            document.body.appendChild(tempCart);
+
+            // Move to cart icon position (rough estimation)
+            setTimeout(() => {
+                tempCart.style.top = "90%"; 
+                tempCart.style.left = "80%";
+                tempCart.style.opacity = "0";
+                tempCart.style.transform = "scale(0.2)";
+            }, 50);
+
+            setTimeout(() => tempCart.remove(), 800);
+
+            cart.push(product);
+            updateCartUI();
+            
+            // Silent update mostly, sometimes respond?
+            // Let's just respond nicely
+            addBotMessage(`បានបន្ថែម ${product.name} \nតម្លៃ: $${product.price.toFixed(2)}`);
+        }
+
+        function updateCartUI() {
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            
+            if (cart.length > 0) {
+                cartBadge.textContent = cart.length;
+                cartBadge.classList.remove('hidden');
+                
+                cartSummary.classList.remove('hidden', 'translate-y-full', 'opacity-0');
+                cartCountSummary.textContent = `${cart.length} មុខ`;
+                cartTotalSummary.textContent = `$${total.toFixed(2)}`;
+            } else {
+                cartBadge.classList.add('hidden');
+                cartSummary.classList.add('hidden');
+            }
+        }
+
+        function viewCart() {
+            if (cart.length === 0) {
+                addUserMessage("🛒 មើលកន្ត្រក");
+                addBotMessage("កន្ត្រករបស់អ្នកទទេ! គ្មានទំនិញទេ។ ❌");
+                return;
+            }
+            
+            cartItemsList.innerHTML = '';
+            let total = 0;
+            
+            // Grouping items logic could go here, but simple listing for now
+            cart.forEach((item, index) => {
+                total += item.price;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "flex justify-between items-center p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-sm transition";
+                itemDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100">${item.image}</div>
+                        <div>
+                            <div class="text-sm font-bold text-gray-800 line-clamp-1">${item.name}</div>
+                            <div class="text-[10px] text-gray-400">Unit Price: $${item.price.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-sm text-[#517da2]">$${item.price.toFixed(2)}</span>
+                        <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition group">
+                            <i data-lucide="trash-2" width="16" class="group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </div>
+                `;
+                cartItemsList.appendChild(itemDiv);
+            });
+
+            modalTotal.textContent = `$${total.toFixed(2)}`;
+            cartModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+            
+            if (cart.length === 0) {
+                closeModal();
+            } else {
+                viewCart(); // Re-render
+            }
+        }
+
+        function closeModal() {
+            cartModal.classList.add('hidden');
+        }
+
+        function checkout() {
+            closeModal();
+            addUserMessage("💳 ស្នើសុំទូទាត់ប្រាក់");
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            
+            addBotMessage(`តម្លៃសរុបគឺ: $${total.toFixed(2)}\nសូមស្កេន KHQR ដើម្បីទូទាត់៖`, 'khqr', { total });
+            paymentStatus = 'pending';
+            toggleMenuButtons(false);
+        }
+
+        function confirmPayment() {
+            const btn = document.getElementById('confirm-pay-btn');
+            
+            if(btn) {
+                // Loading state
+                btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin" width="18"></i> កំពុងផ្ទៀងផ្ទាត់...`;
+                btn.classList.remove('bg-[#26a65b]', 'hover:bg-[#1e824c]');
+                btn.classList.add('bg-gray-400', 'cursor-wait');
+                lucide.createIcons();
+            }
+
+            // Fake processing time
+            setTimeout(() => {
+                if(btn) {
+                    btn.parentElement.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-4 text-green-600 animate-pulse">
+                            <i data-lucide="check-circle" width="48" class="mb-2"></i>
+                            <span class="font-bold text-lg">បង់ប្រាក់ជោគជ័យ!</span>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+
+                paymentStatus = 'success';
+                addBotMessage("🎉 ការទូទាត់ទទួលបានជោគជ័យ!\nសូមអរគុណសម្រាប់ការកម្មង់។ យើងនឹងដឹកជញ្ជូនក្នុងពេលឆាប់ៗ។");
+                
+                cart = [];
+                updateCartUI();
+                toggleMenuButtons(true);
+                
+                setTimeout(() => {
+                    paymentStatus = 'idle';
+                }, 2000);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
